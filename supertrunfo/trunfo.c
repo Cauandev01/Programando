@@ -7,6 +7,8 @@ char nome[20];
     float area;
     float pib;
     int pontos;
+    float densidade;
+    float pibper;
     printf("=== Bem vindo ao super trunfo - paises ===\n\n");
     printf("No jogo Super Trunfo, os jogadores comparam as propriedades das cartas para determinar a mais forte.\n\n");
    
@@ -14,7 +16,7 @@ char nome[20];
    
     //Solicitando nome da cidade
     printf("Digite o nome da cidade:\n");
-    scanf("%s" , &nome);
+    scanf("%s" , nome);
     //Solicitando o restante dos atributos
     printf("População:\n");
     scanf("%d" , &populacao);
@@ -24,12 +26,20 @@ char nome[20];
     scanf("%f" , &pib);
     printf("Números de pontos turisticos:\n");
     scanf("%d" , &pontos);
-    
+   
+
+    densidade = populacao / area; 
+
+    pibper = (pib * 1000000) / populacao;
+
 // saida de dados
+
     printf("Nome: %s\n" , nome);
     printf("População: %d\n" , populacao);
-    printf("Área: %f\n" , area);
-    printf("Pib: %f\n" , pib);
+    printf("Área: %.2f\n" , area);
+    printf("Pib: %.2f\n" , pib);
     printf("Pontos turistico: %d\n" , pontos);
+    printf("Densidade populacional: %.3f\n" , densidade);
+    printf("Pib per capita %.3f\n", pibper);
     return 0;
 }
