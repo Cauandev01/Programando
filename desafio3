@@ -1,0 +1,98 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define TAM_FILA 5
+#define TAM_PILHA 3
+
+typedef struct {
+    char nome;
+    int id;
+} Peca;
+
+char tipos[4] = {'I','O','T','L'};
+int contadorID = 0;
+
+Peca gerarPeca() {
+    Peca p;
+    p.nome = tipos[rand() % 4];
+    p.id = contadorID++;
+    return p;
+}
+
+void mostrarFila(Peca fila[], int inicio) {
+    printf("Fila: ");
+    for(int i=0;i<TAM_FILA;i++){
+        int pos = (inicio + i) % TAM_FILA;
+        printf("[%c %d] ", fila[pos].nome, fila[pos].id);
+    }
+    printf("\n");
+}
+
+void mostrarPilha(Peca pilha[], int topo) {
+    printf("Pilha (Topo->Base): ");
+    for(int i=topo;i>=0;i--) printf("[%c %d] ", pilha[i].nome, pilha[i].id);
+    printf("\n");
+}
+
+void jogarPeca(Peca fila[], int *inicio) {
+    *inicio = (*inicio + 1) % TAM_FILA;
+    fila[(*inicio + TAM_FILA - 1) % TAM_FILA] = gerarPeca();
+}
+
+void reservarPeca(Peca fila[], int *inicio, Peca pilha[], int *topo) {
+    if(*topo == TAM_PILHA-1) return;
+    pilha[++(*topo)] = fila[*inicio];
+    *inicio = (*inicio + 1) % TAM_FILA;
+    fila[(*inicio + TAM_FILA - 1) % TAM_FILA] = gerarPeca();
+}
+
+void usarReservada(Peca pilha[], int *topo) {
+    if(*topo >= 0) (*topo)--;
+}
+
+void trocarTopo(Peca fila[], int inicio, Peca pilha[], int topo) {
+    if(topo < 0) return;
+    Peca temp = fila[inicio];
+    fila[inicio] = pilha[topo];
+    pilha[topo] = temp;
+}
+
+void trocaMultipla(Peca fila[], int inicio, Peca pilha[], int topo) {
+    if(topo < 2) return;
+    for(int i=0;i<3;i++){
+        int pos = (inicio + i) % TAM_FILA;
+        Peca temp = fila[pos];
+        fila[pos] = pilha[topo-i];
+        pilha[topo-i] = temp;
+    }
+}
+
+int main() {
+    srand(time(NULL));
+
+    Peca fila[TAM_FILA], pilha[TAM_PILHA];
+    int inicio = 0, topo = -1, op;
+
+    for(int i=0;i<TAM_FILA;i++) fila[i] = gerarPeca();
+
+    do {
+        printf("\n=== TETRIS STACK ===\n");
+        mostrarFila(fila, inicio);
+        mostrarPilha(pilha, topo);
+
+        printf("\n1 - Jogar peça\n2 - Reservar peça\n3 - Usar peça reservada\n");
+        printf("4 - Trocar atual com topo\n5 - Troca múltipla (3x3)\n0 - Sair\nOpção: ");
+        scanf("%d",&op);
+
+        switch(op){
+            case 1: jogarPeca(fila,&inicio); break;
+            case 2: reservarPeca(fila,&inicio,pilha,&topo); break;
+            case 3: usarReservada(pilha,&topo); break;
+            case 4: trocarTopo(fila,inicio,pilha,topo); break;
+            case 5: trocaMultipla(fila,inicio,pilha,topo); break;
+        }
+    } while(op != 0);
+
+    return 0;
+}
