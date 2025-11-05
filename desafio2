@@ -1,145 +1,96 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-#define MAX 10
+#define MAX 20
 
-typedef struct { char nome[30], tipo[20]; int qtd; } Item;
-typedef struct No { Item d; struct No* prox; } No;
+typedef struct { char nome[30], tipo[20]; int p; } Comp;
 
-Item vet[MAX];
-int n = 0, compS, compB;
-No* lst = NULL;
+Comp v[MAX];
+int n = 0, comp;
 
-void addVet(){
-    if(n == MAX){ printf("\nFull!\n"); return; }
-    printf("\nNome: "); fgets(vet[n].nome,30,stdin);
-    vet[n].nome[strcspn(vet[n].nome,"\n")] = 0;
-    printf("Tipo: "); fgets(vet[n].tipo,20,stdin);
-    vet[n].tipo[strcspn(vet[n].tipo,"\n")] = 0;
-    printf("Qtd: "); scanf("%d",&vet[n].qtd); getchar();
+void add(){
+    if(n==MAX){printf("Limite!\n");return;}
+    printf("Nome: "); fgets(v[n].nome,30,stdin); v[n].nome[strcspn(v[n].nome,"\n")]=0;
+    printf("Tipo: "); fgets(v[n].tipo,20,stdin); v[n].tipo[strcspn(v[n].tipo,"\n")]=0;
+    printf("Prioridade (1-10): "); scanf("%d",&v[n].p); getchar();
     n++; printf("OK!\n");
 }
 
-void listVet(){
-    if(!n){ printf("\nVazio\n"); return; }
-    for(int i=0;i<n;i++)
-        printf("%s | %s | %d\n",vet[i].nome,vet[i].tipo,vet[i].qtd);
+void show(){
+    for(int i=0;i<n;i++) printf("%s | %s | %d\n",v[i].nome,v[i].tipo,v[i].p);
 }
 
-void rmVet(){
-    if(!n){ printf("\nVazio\n"); return; }
-    char x[30]; printf("\nRemover: "); fgets(x,30,stdin);
-    x[strcspn(x,"\n")] = 0;
-    for(int i=0;i<n;i++){
-        if(!strcmp(vet[i].nome,x)){
-            for(int j=i;j<n-1;j++) vet[j]=vet[j+1];
-            n--; printf("OK!\n"); return;
-        }
-    }
-    printf("Nao achou\n");
-}
-
-void buscaSeqVet(){
-    char x[30]; printf("\nNome: "); fgets(x,30,stdin);
-    x[strcspn(x,"\n")] = 0; compS = 0;
-    for(int i=0;i<n;i++){
-        compS++;
-        if(!strcmp(vet[i].nome,x)){
-            printf("%s | %s | %d\n",vet[i].nome,vet[i].tipo,vet[i].qtd);
-            printf("Comp: %d\n",compS); return;
-        }
-    }
-    printf("Nao achou | Comp: %d\n",compS);
-}
-
-void sortVet(){
+void bubbleNome(){
+    comp = 0;
     for(int i=0;i<n-1;i++)
-        for(int j=0;j<n-i-1;j++)
-            if(strcmp(vet[j].nome,vet[j+1].nome)>0){
-                Item t = vet[j]; vet[j]=vet[j+1]; vet[j+1]=t;
+        for(int j=0;j<n-i-1;j++){
+            comp++;
+            if(strcmp(v[j].nome,v[j+1].nome)>0){
+                Comp t=v[j]; v[j]=v[j+1]; v[j+1]=t;
             }
-    printf("Ordenado!\n");
+        }
 }
 
-void buscaBinVet(){
-    char x[30]; printf("\nNome: "); fgets(x,30,stdin);
-    x[strcspn(x,"\n")] = 0; int l=0,r=n-1; compB=0;
+void insertionTipo(){
+    comp=0;
+    for(int i=1;i<n;i++){
+        Comp key=v[i]; int j=i-1;
+        while(j>=0 && (++comp && strcmp(key.tipo,v[j].tipo)<0)){
+            v[j+1]=v[j]; j--;
+        }
+        v[j+1]=key;
+    }
+}
+
+void selectionPrior(){
+    comp=0;
+    for(int i=0;i<n-1;i++){
+        int m=i;
+        for(int j=i+1;j<n;j++){
+            comp++;
+            if(v[j].p < v[m].p) m=j;
+        }
+        Comp t=v[i]; v[i]=v[m]; v[m]=t;
+    }
+}
+
+void buscaBin(){
+    if(!n){printf("Vazio\n");return;}
+    char x[30]; printf("Buscar nome: "); fgets(x,30,stdin); x[strcspn(x,"\n")]=0;
+    int l=0,r=n-1; comp=0;
     while(l<=r){
-        int m=(l+r)/2; compB++;
-        int cmp = strcmp(x,vet[m].nome);
-        if(!cmp){
-            printf("%s | %s | %d\n",vet[m].nome,vet[m].tipo,vet[m].qtd);
-            printf("Comp: %d\n",compB); return;
-        } else if(cmp>0) l=m+1; else r=m-1;
+        int m=(l+r)/2; comp++;
+        int c=strcmp(x,v[m].nome);
+        if(!c){ printf("Achado: %s | %s | %d\nComp: %d\n",v[m].nome,v[m].tipo,v[m].p,comp); return; }
+        else if(c>0) l=m+1; else r=m-1;
     }
-    printf("Nao achou | Comp: %d\n",compB);
+    printf("Nao achou | Comp: %d\n",comp);
 }
 
-void addLst(){
-    No* p = malloc(sizeof(No));
-    printf("\nNome: "); fgets(p->d.nome,30,stdin);
-    p->d.nome[strcspn(p->d.nome,"\n")] = 0;
-    printf("Tipo: "); fgets(p->d.tipo,20,stdin);
-    p->d.tipo[strcspn(p->d.tipo,"\n")] = 0;
-    printf("Qtd: "); scanf("%d",&p->d.qtd); getchar();
-    p->prox = lst; lst = p;
-    printf("OK!\n");
-}
-
-void listLst(){
-    No* p = lst; if(!p){ printf("\nVazio\n"); return; }
-    while(p){ printf("%s | %s | %d\n",p->d.nome,p->d.tipo,p->d.qtd); p=p->prox; }
-}
-
-void rmLst(){
-    char x[30]; printf("\nRemover: "); fgets(x,30,stdin);
-    x[strcspn(x,"\n")] = 0;
-    No *p=lst,*a=NULL;
-    while(p){
-        if(!strcmp(p->d.nome,x)){
-            if(!a) lst=p->prox; else a->prox=p->prox;
-            free(p); printf("OK!\n"); return;
-        }
-        a=p; p=p->prox;
-    }
-    printf("Nao achou\n");
-}
-
-void buscaLst(){
-    char x[30]; printf("\nNome: "); fgets(x,30,stdin);
-    x[strcspn(x,"\n")] = 0; compS=0;
-    No* p=lst;
-    while(p){
-        compS++;
-        if(!strcmp(p->d.nome,x)){
-            printf("%s | %s | %d\n",p->d.nome,p->d.tipo,p->d.qtd);
-            printf("Comp: %d\n",compS); return;
-        }
-        p=p->prox;
-    }
-    printf("Nao achou | Comp: %d\n",compS);
+void medir(void (*f)()){
+    clock_t ini=clock(); f(); clock_t fim=clock();
+    double t=(double)(fim-ini)/CLOCKS_PER_SEC;
+    printf("OK | Comp: %d | Tempo: %.6fs\n",comp,t);
 }
 
 int main(){
-    int m,o;
+    int o,s; 
     do{
-        printf("\n1 Vetor\n2 Lista\n0 Sair\n> ");
-        scanf("%d",&m); getchar();
-        while(m==1){
-            printf("\n1 Add\n2 Rm\n3 List\n4 Busc Seq\n5 Ordenar\n6 Busc Bin\n0 Voltar\n> ");
-            scanf("%d",&o); getchar();
-            if(o==1)addVet(); else if(o==2)rmVet(); 
-            else if(o==3)listVet(); else if(o==4)buscaSeqVet();
-            else if(o==5)sortVet(); else if(o==6)buscaBinVet();
-            else if(o==0)break;
+        printf("\n1 Add\n2 Ver\n3 Ordenar\n4 Buscar binaria\n0 Sair\n> ");
+        scanf("%d",&o); getchar();
+        if(o==1)add();
+        else if(o==2)show();
+        else if(o==3){
+            printf("1 Nome(Bubble)\n2 Tipo(Insertion)\n3 Prioridade(Selection)\n> ");
+            scanf("%d",&s); getchar();
+            if(s==1)medir(bubbleNome);
+            else if(s==2)medir(insertionTipo);
+            else if(s==3)medir(selectionPrior);
+            show();
         }
-        while(m==2){
-            printf("\n1 Add\n2 Rm\n3 List\n4 Buscar\n0 Voltar\n> ");
-            scanf("%d",&o); getchar();
-            if(o==1)addLst(); else if(o==2)rmLst(); 
-            else if(o==3)listLst(); else if(o==4)buscaLst();
-            else if(o==0)break;
-        }
-    }while(m!=0);
+        else if(o==4)buscaBin();
+    }while(o!=0);
 }
+
