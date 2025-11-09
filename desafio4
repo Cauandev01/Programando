@@ -1,0 +1,94 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct Sala {
+    char *nome;
+    char *pista;
+    struct Sala *esq, *dir;
+} Sala;
+
+typedef struct PistaNode {
+    char *pista;
+    struct PistaNode *esq, *dir;
+} PistaNode;
+
+typedef struct HashEntry {
+    char *pista, *suspeito;
+    struct HashEntry *next;
+} HashEntry;
+
+#define HASH_SIZE 50
+
+Sala *criarSala(const char *n, const char *p){
+    Sala *s=malloc(sizeof(Sala));
+    s->nome=strdup(n);
+    s->pista=p?strdup(p):NULL;
+    s->esq=s->dir=NULL;
+    return s;
+}
+
+PistaNode *inserirPista(PistaNode *r,const char *p){
+    if(!p)return r;
+    if(!r){
+        PistaNode *n=malloc(sizeof(PistaNode));
+        n->pista=strdup(p);
+        n->esq=n->dir=NULL;
+        return n;
+    }
+    int c=strcmp(p,r->pista);
+    if(c<0)r->esq=inserirPista(r->esq,p);
+    else if(c>0)r->dir=inserirPista(r->dir,p);
+    return r;
+}
+
+void mostrarPistas(PistaNode *r){
+    if(!r)return;
+    mostrarPistas(r->esq);
+    printf("- %s\n",r->pista);
+    mostrarPistas(r->dir);
+}
+
+unsigned int hashf(const char *s){unsigned long h=0;while(*s)h=(h*31)+*s++;return h%HASH_SIZE;}
+void addHash(HashEntry *h[],const char *p,const char *s){unsigned i=hashf(p);HashEntry *e=malloc(sizeof(HashEntry));e->pista=strdup(p);e->suspeito=strdup(s);e->next=h[i];h[i]=e;}
+char *getSuspeito(HashEntry *h[],const char *p){unsigned i=hashf(p);for(HashEntry *e=h[i];e;e=e->next)if(!strcmp(e->pista,p))return e->suspeito;return NULL;}
+int contar(PistaNode *r,HashEntry *h[],const char *s){if(!r)return 0;int c=0;c+=contar(r->esq,h,s);char *x=getSuspeito(h,r->pista);if(x&&!strcmp(x,s))c++;c+=contar(r->dir,h,s);return c;}
+
+void explorar(Sala *a,PistaNode **b,HashEntry *h[]){
+    char o[10];Sala *at=a;
+    while(at){
+        printf("Sala: %s\n",at->nome);
+        if(at->pista){printf("Pista: %s\n",at->pista);*b=inserirPista(*b,at->pista);}
+        if(!at->esq&&!at->dir){printf("Sem caminhos. (s para sair) ");fgets(o,10,stdin);if(o[0]=='s')break;at=a;continue;}
+        printf("(e)esq (d)dir (s)sair: ");fgets(o,10,stdin);
+        if(o[0]=='s')break;else if(o[0]=='e'&&at->esq)at=at->esq;else if(o[0]=='d'&&at->dir)at=at->dir;else printf("Invalido\n");
+    }
+}
+
+int main(){
+    HashEntry *h[HASH_SIZE]={0};
+    Sala *hall=criarSala("Hall",NULL);
+    hall->esq=criarSala("Sala de Estar","Pegada");
+    hall->dir=criarSala("Cozinha","Fósforo");
+    hall->esq->esq=criarSala("Biblioteca","Diário");
+    hall->dir->dir=criarSala("Laboratório","Fio");
+
+    addHash(h,"Pegada","Almeida");
+    addHash(h,"Fósforo","Beatriz");
+    addHash(h,"Diário","Clara");
+    addHash(h,"Fio","Beatriz");
+
+    PistaNode *b=NULL;
+    explorar(hall,&b,h);
+
+    printf("\nPistas:\n");
+    mostrarPistas(b);
+
+    char nome[50];
+    printf("\nAcuse alguém: ");
+    fgets(nome,50,stdin);
+    nome[strcspn(nome,"\n")]=0;
+    int c=contar(b,h,nome);
+    if(c>=2)printf("%s é culpado!\n",nome);
+    else printf("Sem provas contra %s.\n",nome);
+}
